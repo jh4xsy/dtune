@@ -26,9 +26,9 @@ def get_spec(name)
 
   while f.gets
     raw = $_.split(",")
-    if raw[0] !~ /;/		        # skip comment 
+    if raw[0] !~ /;/                    # skip comment 
       k2tmp = raw[1].to_i + raw[2].to_i
-      if raw[3] == "USB"	        # find linear transponder
+      if raw[3] == "USB"	              # find linear transponder
         if raw[0] == name               # find target satellite
           sat_nam = raw[0]
           k2 = k2tmp.to_f / 1000.0      # calc up_freq+down_freq
@@ -41,6 +41,28 @@ def get_spec(name)
   f.close
 
   return sat_nam, k2
+
+end
+
+#
+def get_calibr_freq(name)
+
+  f = open("Calibr.dat", "r")
+
+  calibr_freq = 0
+
+  while f.gets
+    raw = $_.split(",")
+    if raw[0] !~ /;/                    # skip comment 
+      if raw[0] == name                 # find target satellite
+        tmp = raw[1].to_f
+        calibr_freq = tmp / 1000.0      # MHz 
+        break
+      end
+    end
+  end
+
+  return calibr_freq
 
 end
 
@@ -59,7 +81,8 @@ if sat_nam == ""
   exit
 end
 
-OFFSET = -0.0040
+calibr_freq = get_calibr_freq(ARGV[0])
+#print calibr_freq , "\n"
 
 # --- READ DOWN FREQ.
 
@@ -79,7 +102,7 @@ udp = UDPSocket.open
 udp.bind(HOST, 0)
 
 cmd = sprintf("GET_DOPPLER %s", sat_nam)
-print cmd, "\n"
+#print cmd, "\n"
 udp.send(cmd, 0, HOST, PORTP)
 
 begin
@@ -100,7 +123,7 @@ printf("RIG down=%f\t", down)
 printf("SAT down=%f\n", sat_down)
 
 sat_up  = k2 - sat_down
-sat_up += OFFSET.to_f
+sat_up += calibr_freq
 
 up = sat_up - calc_doppler(sat_up, doppler)
 
