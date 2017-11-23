@@ -3,8 +3,8 @@
 
 require 'socket'
 
-PORTP = '1210'		# predict:server port
-PORTR = '4533'		# rigctld:port
+PORTP = '1210'          # predict:server port
+PORTR = '4533'          # rigctld:port
 HOST  = 'localhost'
 
 # 
@@ -28,8 +28,8 @@ def get_spec(name)
     raw = $_.split(",")
     if raw[0] !~ /;/                    # skip comment 
       k2tmp = raw[1].to_i + raw[2].to_i
-      if raw[3] == "USB"	              # find linear transponder
-        if raw[0] == name               # find target satellite
+      if raw[3] == "USB"                # search linear transponder
+        if raw[0] == name               # search target satellite
           sat_nam = raw[0]
           k2 = k2tmp.to_f / 1000.0      # calc up_freq+down_freq
           break
@@ -54,9 +54,9 @@ def get_calibr_freq(name)
   while f.gets
     raw = $_.split(",")
     if raw[0] !~ /;/                    # skip comment 
-      if raw[0] == name                 # find target satellite
+      if raw[0] == name                	# search target satellite
         tmp = raw[1].to_f
-        calibr_freq = tmp / 1000.0      # MHz 
+        calibr_freq = tmp / 1000.0      # convert to MHz 
         break
       end
     end
@@ -82,59 +82,80 @@ if sat_nam == ""
 end
 
 calibr_freq = get_calibr_freq(ARGV[0])
-#print calibr_freq , "\n"
+printf("Calibr_freq = %f\n", calibr_freq)
 
-# --- READ DOWN FREQ.
+while 1
 
-rig = TCPSocket.open(HOST,PORTR)
+  # --- READ DOWN FREQ.
 
-rig.printf("V Sub\n")
-res = rig.gets
+  rig = TCPSocket.open(HOST,PORTR)
 
-rig.printf("f\n")
-res = rig.gets
+  rig.printf("V Sub\n")
+  res = rig.gets
 
-down = res.to_f / 1000000
+  rig.printf("f\n")
+  res = rig.gets
 
-# --- CONNECT PREDICT SERVER
+  down = res.to_f / 1000000
 
-udp = UDPSocket.open
-udp.bind(HOST, 0)
+  # --- CONNECT PREDICT SERVER
 
-cmd = sprintf("GET_DOPPLER %s", sat_nam)
-#print cmd, "\n"
-udp.send(cmd, 0, HOST, PORTP)
+  udp = UDPSocket.open
+  udp.bind(HOST, 0)
 
-begin
-  doppler = udp.recv(100, 0)
-rescue
-  printf("NO REPLY from PREDICT server\n")
-  exit
+  cmd = sprintf("GET_DOPPLER %s", sat_nam)
+  #print cmd, "\n"
+  udp.send(cmd, 0, HOST, PORTP)
+
+  begin
+    doppler = udp.recv(100, 0)
+  rescue
+    printf("NO REPLY from PREDICT server\n")
+    exit
+  end
+  udp.close
+
+  printf("doppler=%f\n", doppler)
+
+  # --- CALC UP/DOWN FREQ
+
+  sat_down = down - calc_doppler(down, doppler)
+
+  printf("RIG down=%f\t", down)
+  printf("SAT down=%f\n", sat_down)
+
+  sat_up  = k2 - sat_down
+  sat_up += calibr_freq
+
+  up = sat_up - calc_doppler(sat_up, doppler)
+
+  printf("RIG up  =%f\t", up)
+  printf("SAT up  =%f\n", sat_up)
+
+  # --- SET UP FREQ.
+
+  rig.printf("V Main\n")
+  res = rig.gets
+  rig.printf("F %9.0f\n", up * 1000000)
+  res = rig.gets
+
+  # --- WAIT KEY-INPUT
+
+  printf(". ")
+  a = STDIN.gets
+
+  if a == "u\n" then            # U)pdate calibr_freq
+    rig.printf("V Main\n")
+    res = rig.gets
+    rig.printf("f\n")
+    res = rig.gets
+
+    up2 = res.to_f / 1000000
+
+    calibr_freq += up2 - up
+    printf("Calibr_freq = %f\n", calibr_freq)
+  end  
+
 end
-udp.close
-
-printf("doppler=%f\n", doppler)
-
-# --- CALC UP/DOWN FREQ
-
-sat_down = down - calc_doppler(down, doppler)
-
-printf("RIG down=%f\t", down)
-printf("SAT down=%f\n", sat_down)
-
-sat_up  = k2 - sat_down
-sat_up += calibr_freq
-
-up = sat_up - calc_doppler(sat_up, doppler)
-
-printf("RIG up  =%f\t", up)
-printf("SAT up  =%f\n", sat_up)
-
-# --- SET UP FREQ.
-
-rig.printf("V Main\n")
-res = rig.gets
-rig.printf("F %9.0f\n", up * 1000000)
-res = rig.gets
 
 rig.close()
