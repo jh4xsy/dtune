@@ -4,11 +4,11 @@ Tuning assistance for Satelliter.
 dtune read a downlink frequency from RIG, Calculate Doppler shift, Set an uplink frequency to RIG.
 
 ```
-% dtune.rb FO-29
-Calibr_freq = -0.002300
-doppler=-1688.753957
-RIG down=435.820000	SAT down=435.827360
-RIG up  =145.974805	SAT up  =145.972340
+% ruby dtune.rb XW-2F
+Calibr_freq = -0.001400
+doppler=0.002323
+RIG down=145.827459	SAT down=145.824071
+RIG up  =435.494412	SAT up  =435.504529
 . 
 ```
 All you need is to adjust TX dail so that you can hear your own signal.
@@ -16,7 +16,8 @@ All you need is to adjust TX dail so that you can hear your own signal.
 Commands:
 ```
 (line feed) - Update uplink freq. for current downlink freq.
-u - Update calibration frequency, keep this offset during session.
+u - Update calibration frequency, Write log file, Keep this offset during session.
+q - Quit
 ```
 
 Use predict, rigctld(hamlib) and Doppler.sqf(SatPC32). Tested on IC-910D.

@@ -1,7 +1,10 @@
 #!/usr/bin/ruby
 #
+# dtune.rb by JH4XSY/1 2018
+#
 
 require 'socket'
+require 'date'
 
 PORTP = '1210'          # predict:server port
 PORTR = '4533'          # rigctld:port
@@ -115,7 +118,7 @@ while 1
   end
   udp.close
 
-  printf("doppler=%f\n", doppler)
+  printf("doppler=%f\n", doppler.to_f/10**6)
 
   # --- CALC UP/DOWN FREQ
 
@@ -143,8 +146,9 @@ while 1
 
   printf(". ")
   a = STDIN.gets
+  a.chop!
 
-  if a == "u\n" then            # U)pdate calibr_freq
+  if a == "u" then            # U)pdate calibr_freq
     rig.printf("V Main\n")
     res = rig.gets
     rig.printf("f\n")
@@ -154,6 +158,15 @@ while 1
 
     calibr_freq += up2 - up
     printf("Calibr_freq = %f\n", calibr_freq)
+
+    f = open("Calibr.csv", "a")
+    f.printf("%s,%f,%s\n", sat_nam, calibr_freq, Time.now.utc)
+    f.close
+
+  end
+
+  if a == "q" then            # Q)uit
+    break
   end  
 
 end
