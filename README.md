@@ -5,10 +5,10 @@ dtune read a downlink frequency from RIG, Calculate Doppler shift, Set an uplink
 
 ```
 % ruby dtune.rb XW-2F
-Calibr_freq = -0.001400
-doppler=0.002323
-RIG down=145.827459	SAT down=145.824071
-RIG up  =435.494412	SAT up  =435.504529
+Calibr_freq = -0.001199
+doppler=-0.001929
+RIG down=145.981130	SAT down=145.983946
+RIG up  =435.353253	SAT up  =435.344855
 . 
 ```
 All you need is to adjust TX dail so that you can hear your own signal.
@@ -17,6 +17,7 @@ Commands:
 ```
 (line feed) - Update uplink freq. for current downlink freq.
 u - Update calibration frequency, Write log file, Keep this offset during session.
+m - Toggle CW and LSB.
 q - Quit
 ```
 

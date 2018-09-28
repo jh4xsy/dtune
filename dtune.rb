@@ -9,6 +9,7 @@ require 'date'
 PORTP = '1210'          # predict:server port
 PORTR = '4533'          # rigctld:port
 HOST  = 'localhost'
+mode  = "CW"            # CW is default!, because I love CW!!
 
 # 
 def calc_doppler(freq, doppler)
@@ -159,10 +160,26 @@ while 1
     calibr_freq += up2 - up
     printf("Calibr_freq = %f\n", calibr_freq)
 
-    f = open("Calibr.csv", "a")
+    f = open("Calibr.csv", "a") # record in file
     f.printf("%s,%f,%s\n", sat_nam, calibr_freq, Time.now.utc)
     f.close
 
+  end
+
+  if a == "m" then             # M)ode change on TX VFO
+    rig.printf("V Main\n")
+    res = rig.gets
+    if mode == "CW" then       # toggle CW/LSB
+      mode = "SSB"
+      printf("mode: %s\n", mode)
+      rig.printf("M LSB 0\n")
+      res = rig.gets
+    else
+      mode = "CW"
+      printf("mode: %s\n", mode)
+      rig.printf("M CW 0\n")
+      res = rig.gets
+    end
   end
 
   if a == "q" then            # Q)uit
