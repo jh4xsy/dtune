@@ -88,11 +88,25 @@ end
 calibr_freq = get_calibr_freq(ARGV[0])
 printf("Calibr_freq = %f\n", calibr_freq)
 
+# --- setup RIG
+
+rig = TCPSocket.open(HOST,PORTR)
+
+rig.printf("V Sub\n")
+res = rig.gets()
+rig.printf("F 145900000\n")
+res = rig.gets()
+rig.printf("M USB 0\n")
+res = rig.gets()
+rig.printf("V Main\n")
+res = rig.gets()
+rig.printf("M CW 0\n")
+res = rig.gets()
+
+
 while 1
 
   # --- READ DOWN FREQ.
-
-  rig = TCPSocket.open(HOST,PORTR)
 
   rig.printf("V Sub\n")
   res = rig.gets
