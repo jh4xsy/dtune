@@ -36,6 +36,7 @@ def get_spec(name)
         if raw[0] == name               # search target satellite
           sat_nam = raw[0]
           k2 = k2tmp.to_f / 1000.0      # calc up_freq+down_freq
+	  down = raw[1].to_i		# get downlink freq
           break
         end
       end
@@ -44,7 +45,7 @@ def get_spec(name)
 
   f.close
 
-  return sat_nam, k2
+  return sat_nam, k2, down
 
 end
 
@@ -78,7 +79,7 @@ if ARGV[0] == nil
   exit
 end
 
-sat_nam, k2 = get_spec(ARGV[0])
+sat_nam, k2, down = get_spec(ARGV[0])
 
 if sat_nam == "" 
   print  "Satellite \"", ARGV[0], "\" was NOT FOUND!\n"
@@ -94,7 +95,7 @@ rig = TCPSocket.open(HOST,PORTR)
 
 rig.printf("V Sub\n")
 res = rig.gets()
-rig.printf("F 145900000\n")
+rig.printf("F %d\n", down*1000)
 res = rig.gets()
 rig.printf("M USB 0\n")
 res = rig.gets()
@@ -122,7 +123,6 @@ while 1
   udp.bind(HOST, 0)
 
   cmd = sprintf("GET_DOPPLER %s", sat_nam)
-  #print cmd, "\n"
   udp.send(cmd, 0, HOST, PORTP)
 
   begin
@@ -201,5 +201,16 @@ while 1
   end  
 
 end
+
+# --- setup RIG
+
+rig.printf("V Main\n")
+res = rig.gets()
+rig.printf("M FM 0\n")
+res = rig.gets()
+rig.printf("V Sub\n")
+res = rig.gets()
+rig.printf("M FM 0\n")
+res = rig.gets()
 
 rig.close()
