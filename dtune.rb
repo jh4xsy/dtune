@@ -103,6 +103,8 @@ rig.printf("V Main\n")
 res = rig.gets()
 rig.printf("M CW 0\n")
 res = rig.gets()
+rig.printf("L AF 0\n")
+res = rig.gets()
 
 
 while 1
@@ -207,6 +209,8 @@ end
 rig.printf("V Main\n")
 res = rig.gets()
 rig.printf("M FM 0\n")
+res = rig.gets()
+rig.printf("L AF 0.145\n")
 res = rig.gets()
 rig.printf("V Sub\n")
 res = rig.gets()
