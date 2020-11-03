@@ -80,6 +80,7 @@ if ARGV[0] == nil
 end
 
 sat_nam, k2, down = get_spec(ARGV[0])
+down_old = down/1000
 
 if sat_nam == "" 
   print  "Satellite \"", ARGV[0], "\" was NOT FOUND!\n"
@@ -93,11 +94,11 @@ printf("Calibr_freq = %f\n", calibr_freq)
 
 rig = TCPSocket.open(HOST,PORTR)
 
-rig.printf("V Sub\n")
+rig.printf("V SubA\n")
 res = rig.gets()
 rig.printf("F %d\n", down*1000)
 res = rig.gets()
-rig.printf("M USB 0\n")
+rig.printf("M USB 3000\n")
 res = rig.gets()
 rig.printf("V Main\n")
 res = rig.gets()
@@ -106,18 +107,24 @@ res = rig.gets()
 rig.printf("L AF 0\n")
 res = rig.gets()
 
-
 while 1
 
   # --- READ DOWN FREQ.
 
-  rig.printf("V Sub\n")
+  rig.printf("V SubA\n")
   res = rig.gets
+  sleep 0.1                   # wait VFO SELECTION
 
   rig.printf("f\n")
   res = rig.gets
-
+  
   down = res.to_f / 1000000
+
+  # --- CHECK DOWN FREQ
+  if ( down.to_i != down_old.to_i)
+     print "*"
+     down = down_old          # discard MAIN VFO FREQ
+  end
 
   # --- CONNECT PREDICT SERVER
 
@@ -202,19 +209,21 @@ while 1
     break
   end  
 
+  down_old = down             # KEEP DOWN FREQ 
+
 end
 
 # --- setup RIG
 
 rig.printf("V Main\n")
 res = rig.gets()
-rig.printf("M FM 0\n")
+rig.printf("M PKTFM 15000\n")
 res = rig.gets()
 rig.printf("L AF 0.145\n")
 res = rig.gets()
-rig.printf("V Sub\n")
+rig.printf("V SubA\n")
 res = rig.gets()
-rig.printf("M FM 0\n")
+rig.printf("M PKTFM 15000\n")
 res = rig.gets()
 
 rig.close()

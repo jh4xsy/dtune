@@ -21,4 +21,4 @@ m - Toggle CW and LSB.
 q - Quit
 ```
 
-Use predict, rigctld(hamlib) and Doppler.sqf(SatPC32). Tested on IC-910D.
+Use predict, rigctld(hamlib 4.1) and Doppler.sqf(SatPC32). Tested on IC-9700.
