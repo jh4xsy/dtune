@@ -106,6 +106,9 @@ rig.printf("M CW 0\n")
 res = rig.gets()
 rig.printf("L AF 0\n")
 res = rig.gets()
+# Change SPECTRUM SCOPE to Sub BAND
+rig.printf("w \\0xfe\\0xfe\\0xa2\\0xe0\\0x27\\0x12\\0x01\\0xfd\n")
+res = rig.gets()
 
 while 1
 
@@ -224,6 +227,9 @@ res = rig.gets()
 rig.printf("V SubA\n")
 res = rig.gets()
 rig.printf("M PKTFM 15000\n")
+res = rig.gets()
+# Change SPECTRUM SCOPE to Main BAND
+rig.printf("w \\0xfe\\0xfe\\0xa2\\0xe0\\0x27\\0x12\\0x00\\0xfd\n")
 res = rig.gets()
 
 rig.close()
