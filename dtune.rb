@@ -80,12 +80,13 @@ if ARGV[0] == nil
 end
 
 sat_nam, k2, down = get_spec(ARGV[0])
-down_old = down/1000
 
 if sat_nam == "" 
   print  "Satellite \"", ARGV[0], "\" was NOT FOUND!\n"
   exit
 end
+
+down_old = down/1000
 
 calibr_freq = get_calibr_freq(ARGV[0])
 printf("Calibr_freq = %f\n", calibr_freq)
