@@ -95,27 +95,28 @@ printf("Calibr_freq = %f\n", calibr_freq)
 
 rig = TCPSocket.open(HOST,PORTR)
 
-rig.printf("V SubA\n")
+rig.printf("S 0 Sub\n")
+rig.gets()
+
+rig.printf("V Main\n")
 res = rig.gets()
 rig.printf("F %d\n", down*1000)
 res = rig.gets()
+sleep 0.3                     # wait VFO SELECTION
 rig.printf("M USB 3000\n")
 res = rig.gets()
-rig.printf("V Main\n")
+rig.printf("V Sub\n")
 res = rig.gets()
 rig.printf("M CW 0\n")
 res = rig.gets()
 rig.printf("L AF 0\n")
-res = rig.gets()
-# Change SPECTRUM SCOPE to Sub BAND
-rig.printf("w \\0xfe\\0xfe\\0xa2\\0xe0\\0x27\\0x12\\0x01\\0xfd\n")
 res = rig.gets()
 
 while 1
 
   # --- READ DOWN FREQ.
 
-  rig.printf("V SubA\n")
+  rig.printf("V Main\n")
   res = rig.gets
   sleep 0.1                   # wait VFO SELECTION
 
@@ -165,19 +166,22 @@ while 1
 
   # --- SET UP FREQ.
 
-  rig.printf("V Main\n")
+  rig.printf("V Sub\n")
   res = rig.gets
   rig.printf("F %9.0f\n", up * 1000000)
   res = rig.gets
 
   # --- WAIT KEY-INPUT
 
+  rig.printf("V Main\n")
+  res = rig.gets()
+
   printf(". ")
   a = STDIN.gets
   a.chop!
 
   if a == "u" then            # U)pdate calibr_freq
-    rig.printf("V Main\n")
+    rig.printf("V Sub\n")
     res = rig.gets
     rig.printf("f\n")
     res = rig.gets
@@ -194,7 +198,7 @@ while 1
   end
 
   if a == "m" then             # M)ode change on TX VFO
-    rig.printf("V Main\n")
+    rig.printf("V Sub\n")
     res = rig.gets
     if mode == "CW" then       # toggle CW/LSB
       mode = "SSB"
@@ -219,18 +223,7 @@ end
 
 # --- setup RIG
 
-rig.printf("V Main\n")
-res = rig.gets()
-rig.printf("M PKTFM 15000\n")
-res = rig.gets()
-rig.printf("L AF 0.145\n")
-res = rig.gets()
-rig.printf("V SubA\n")
-res = rig.gets()
-rig.printf("M PKTFM 15000\n")
-res = rig.gets()
-# Change SPECTRUM SCOPE to Main BAND
-rig.printf("w \\0xfe\\0xfe\\0xa2\\0xe0\\0x27\\0x12\\0x00\\0xfd\n")
+rig.printf("S 0 VFOA\n")
 res = rig.gets()
 
 rig.close()
