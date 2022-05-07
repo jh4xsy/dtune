@@ -36,7 +36,7 @@ def get_spec(name)
         if raw[0] == name               # search target satellite
           sat_nam = raw[0]
           k2 = k2tmp.to_f / 1000.0      # calc up_freq+down_freq
-	  down = raw[1].to_i		# get downlink freq
+          down = raw[1].to_i            # get downlink freq
           break
         end
       end
@@ -145,9 +145,19 @@ while 1
     printf("NO REPLY from PREDICT server\n")
     exit
   end
-  udp.close
 
   printf("doppler=%f\n", doppler.to_f/10**6)
+
+  cmd = sprintf("GET_TLE %s", sat_nam)
+  udp.send(cmd, 0, HOST, PORTP)
+
+  res = udp.recv(100, 0)
+  unless res.include?(sat_nam)
+    printf("NO TLE in PREDICT servere\n")
+    break
+  end
+
+  udp.close
 
   # --- CALC UP/DOWN FREQ
 
