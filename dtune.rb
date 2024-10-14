@@ -1,17 +1,18 @@
 #!/usr/bin/ruby
 #
-# dtune.rb by JH4XSY/1 2018
+# dtune.rb by JH4XSY/1 2024
 #
 
 require 'socket'
 require 'date'
 
+# Constants
 PORTP = '1210'          # predict:server port
 PORTR = '4533'          # rigctld:port
 HOST  = 'localhost'
-mode  = "CW"            # CW is default!, because I love CW!!
+DEFAULT_MODE = "CW"     # CW is default!, because I love CW!!
 
-# 
+# Calculate Doppler shift
 def calc_doppler(freq, doppler)
 
   shift_freq = doppler.to_f * freq / 100000.0
@@ -21,10 +22,12 @@ def calc_doppler(freq, doppler)
 
 end
 
-#
+# Read satellite specification from Doppler.SQF
 def get_spec(name)
 
   sat_nam = ""
+  k2 = 0
+  down = 0
 
   f = open("Doppler.SQF", "r")
 
@@ -49,7 +52,7 @@ def get_spec(name)
 
 end
 
-#
+# Get calibration FREQ. of the sat:$name from Calibr.dat
 def get_calibr_freq(name)
 
   f = open("Calibr.dat", "r")
@@ -71,18 +74,40 @@ def get_calibr_freq(name)
 
 end
 
+# Sets up the RIG with provided settings
+def setup_rig(rig, down_freq)
+
+  rig.puts("S 0 Sub\n")
+  rig.gets
+
+  rig.puts("V Main\n")
+  rig.gets
+  rig.puts("F #{down_freq * 1000}\n")
+  rig.gets
+  sleep 0.3  # wait for VFO selection
+  rig.puts("M USB 3000\n")
+  rig.gets
+  rig.puts("V Sub\n")
+  rig.gets
+  rig.puts("M CW 0\n")
+  rig.gets
+  rig.puts("L AF 0\n")
+  rig.gets
+
+end
+
 
 # -*-*- MAIN PART -*-*-
 
-if ARGV[0] == nil
+if ARGV.empty?
   STDOUT.printf("Usage: dtune.rb Satellite\n")
   exit
 end
 
 sat_nam, k2, down = get_spec(ARGV[0])
 
-if sat_nam == "" 
-  print  "Satellite \"", ARGV[0], "\" was NOT FOUND!\n"
+if sat_nam.empty?
+  printf("Satellite %s was NOT FOUND!\n", ARGV[0])
   exit
 end
 
@@ -93,24 +118,9 @@ printf("Calibr_freq = %f\n", calibr_freq)
 
 # --- setup RIG
 
-rig = TCPSocket.open(HOST,PORTR)
-
-rig.printf("S 0 Sub\n")
-rig.gets()
-
-rig.printf("V Main\n")
-res = rig.gets()
-rig.printf("F %d\n", down*1000)
-res = rig.gets()
-sleep 0.3                     # wait VFO SELECTION
-rig.printf("M USB 3000\n")
-res = rig.gets()
-rig.printf("V Sub\n")
-res = rig.gets()
-rig.printf("M CW 0\n")
-res = rig.gets()
-rig.printf("L AF 0\n")
-res = rig.gets()
+rig = TCPSocket.open(HOST, PORTR)
+setup_rig(rig, down)
+mode = DEFAULT_MODE
 
 while 1
 
@@ -125,7 +135,7 @@ while 1
   
   down = res.to_f / 1000000
 
-  # --- CHECK DOWN FREQ
+  # --- CHECK DOWN FREQ.
   if ( down.to_i != down_old.to_i)
      print "*"
      down = down_old          # discard MAIN VFO FREQ
@@ -187,10 +197,9 @@ while 1
   res = rig.gets()
 
   printf(". ")
-  a = STDIN.gets
-  a.chop!
+  cmd = STDIN.gets.chop
 
-  if a == "u" then            # U)pdate calibr_freq
+  if cmd == "u" then           # U)pdate calibr_freq
     rig.printf("V Sub\n")
     res = rig.gets
     rig.printf("f\n")
@@ -207,23 +216,17 @@ while 1
 
   end
 
-  if a == "m" then             # M)ode change on TX VFO
+  if cmd == "m" then           # M)ode change on TX VFO
     rig.printf("V Sub\n")
     res = rig.gets
-    if mode == "CW" then       # toggle CW/LSB
-      mode = "SSB"
-      printf("mode: %s\n", mode)
-      rig.printf("M LSB 0\n")
-      res = rig.gets
-    else
-      mode = "CW"
-      printf("mode: %s\n", mode)
-      rig.printf("M CW 0\n")
-      res = rig.gets
-    end
+
+    mode = (mode == "CW") ? "SSB" : "CW"
+    puts "mode: #{mode}"
+    rig.puts("M #{(mode == "CW") ? "CW" : "LSB"} 0\n")
+    rig.gets
   end
 
-  if a == "q" then            # Q)uit
+  if cmd == "q" then          # Q)uit
     break
   end  
 
